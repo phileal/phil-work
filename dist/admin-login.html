@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login</title>
-<link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 flex items-center justify-center min-h-screen">
 
@@ -17,14 +18,20 @@
       <input type="password" id="adminPassword" placeholder="Password" class="w-full p-3 mb-4 rounded bg-gray-700" required>
       <button type="submit" class="w-full p-3 bg-blue-500 hover:bg-blue-600 rounded font-bold">Login</button>
     </form>
+
+    <!-- ✅ Go Back Home Button -->
+    <a href="index.html" 
+       class="block mt-6 text-center w-full p-3 bg-gray-700 hover:bg-gray-600 rounded font-bold text-gray-200">
+      ⬅ Go Back Home
+    </a>
   </div>
 
 <script>
   // Super Admin credentials
   const superAdmin = {
-    id: "philemon",
-    email: "aleduphilemon@gmail.com",
-    password: "Philemon-1"
+    id: process.env.ID,
+    email: process.env.Email,
+    password: process.env.password
   };
 
   // Load admins from localStorage (if any)
