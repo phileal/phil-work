@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+
+  <div class="bg-gray-800 p-8 rounded-xl w-96 text-gray-200 shadow-lg">
+    <h2 class="text-2xl font-bold mb-6 text-blue-400 text-center">Customer Login</h2>
+
+    <form id="customerForm">
+      <input type="email" id="customerEmail" placeholder="Email" class="w-full p-3 mb-4 rounded bg-gray-700" required>
+      <input type="password" id="customerPassword" placeholder="Password" class="w-full p-3 mb-4 rounded bg-gray-700" required>
+      <button type="submit" class="w-full p-3 bg-blue-500 hover:bg-blue-600 rounded font-bold">Login</button>
+    </form>
+
+    <p class="mt-4 text-center text-blue-400 cursor-pointer hover:underline" id="forgotPassword">Forgot Password?</p>
+
+    <p class="mt-2 text-center">
+      Don't have an account? 
+      <a href="register.html" class="text-blue-400 hover:underline">Sign Up</a>
+    </p>
+  </div>
+
+  <script>
+    // Load customers from localStorage or create empty array
+    let customers = JSON.parse(localStorage.getItem("customers")) || [];
+
+    const form = document.getElementById('customerForm');
+
+    // Login functionality
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('customerEmail').value.trim();
+      const password = document.getElementById('customerPassword').value.trim();
+
+      const found = customers.find(c => c.email === email && c.password === password);
+      if (found) {
+        // Save current logged-in customer
+        localStorage.setItem('currentCustomer', JSON.stringify(found));
+
+        // ✅ Track active users
+        let activeUsers = JSON.parse(localStorage.getItem("activeUsers")) || [];
+        // Avoid duplicate active users
+        if (!activeUsers.some(u => u.email === found.email)) {
+          activeUsers.push({
+            id: found.id || Date.now(), 
+            name: found.name || "Customer",
+            email: found.email,
+            role: "customer",
+            isActive: true
+          });
+        }
+        localStorage.setItem("activeUsers", JSON.stringify(activeUsers));
+        // ✅ End active user tracking
+
+        alert("Login successful! Welcome " + found.name);
+        window.location.href = "menu.html"; // redirect to customer menu
+      } else {
+        alert("Invalid login details!");
+      }
+    });
+
+    // Forgot password functionality
+    document.getElementById('forgotPassword').addEventListener('click', function() {
+      const email = prompt("Enter your registered Email:");
+      const customer = customers.find(c => c.email === email);
+      if (!customer) {
+        alert("No customer found with this email.");
+        return;
+      }
+
+      const newPassword = prompt("Enter your new password (min 4 characters):");
+      if (newPassword && newPassword.length >= 4) {
+        if (newPassword === customer.password) {
+          alert("New password cannot be the same as the old password!");
+          return;
+        }
+        customer.password = newPassword;
+        localStorage.setItem("customers", JSON.stringify(customers));
+        alert("Password updated successfully!");
+      } else {
+        alert("Password must be at least 4 characters.");
+      }
+    });
+  </script>
+</body>
+</html>

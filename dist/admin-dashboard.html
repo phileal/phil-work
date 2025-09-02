@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100">
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-gray-800 p-6 flex flex-col">
+      <h2 class="text-2xl font-bold text-blue-400 mb-6">Admin Panel</h2>
+
+      <nav class="flex-1 space-y-2">
+        <!-- Products -->
+        <div>
+          <button onclick="toggleMenu('productsMenu')"
+            class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">Products ▾</button>
+          <div id="productsMenu" class="pl-4 mt-1 space-y-1 hidden">
+            <a href="add-product.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Add Product</a>
+            <a href="products.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">View Products</a>
+          </div>
+        </div>
+
+        <!-- Orders -->
+        <div>
+          <button onclick="toggleMenu('ordersMenu')"
+            class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">Orders ▾</button>
+          <div id="ordersMenu" class="pl-4 mt-1 space-y-1 hidden">
+            <a href="pending-orders.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Pending Orders</a>
+            <a href="completed-orders.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Completed Orders</a>
+          </div>
+        </div>
+
+        <!-- Admin Tools -->
+        <div id="adminToolsSection" class="mt-4">
+          <button onclick="toggleMenu('adminMenu')"
+            class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">Admin Tools ▾</button>
+          <div id="adminMenu" class="pl-4 mt-1 space-y-2 hidden">
+            <!-- Super Admin Only -->
+            <div id="superAdminSection" class="hidden">
+              <button onclick="toggleMenu('bankMenu')"
+                class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">Super Admin Bank Info ▾</button>
+              <div id="bankMenu" class="pl-4 mt-1 space-y-1 hidden">
+                <input type="text" id="bankName" placeholder="Bank Name" class="w-full p-2 rounded bg-gray-700 mb-1">
+                <input type="text" id="accountName" placeholder="Account Name"
+                  class="w-full p-2 rounded bg-gray-700 mb-1">
+                <input type="text" id="accountNumber" placeholder="Account Number"
+                  class="w-full p-2 rounded bg-gray-700 mb-1">
+                <button id="saveBankBtn" class="w-full py-2 bg-blue-500 rounded hover:bg-blue-600">Save Bank
+                  Info</button>
+              </div>
+            </div>
+
+            <!-- Super Admin: Create Admin -->
+            <div id="createAdminMenu" class="hidden">
+              <input type="text" id="newAdminId" placeholder="Admin ID" class="w-full p-2 rounded bg-gray-700 mb-1">
+              <input type="email" id="newAdminEmail" placeholder="Admin Email"
+                class="w-full p-2 rounded bg-gray-700 mb-1">
+              <input type="password" id="newAdminPassword" placeholder="Admin Password"
+                class="w-full p-2 rounded bg-gray-700 mb-1">
+              <button id="createAdminBtn" class="w-full py-2 bg-green-500 rounded hover:bg-green-600">Create
+                Admin</button>
+            </div>
+
+            <!-- Manage Admins (Super Admin only) -->
+            <div id="manageAdminsSection" class="hidden">
+              <button onclick="toggleMenu('adminsList')" class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">
+                Manage Admins ▾
+              </button>
+              <div id="adminsList" class="pl-4 mt-1 space-y-1 hidden"></div>
+            </div>
+
+            <!-- Manage Users (All Admins) -->
+            <div id="manageUsersSection">
+              <button onclick="toggleMenu('usersList')" class="w-full text-left py-2 px-3 rounded-lg hover:bg-gray-700">
+                Manage Users ▾
+              </button>
+              <div id="usersList" class="pl-4 mt-1 space-y-1 hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logout -->
+        <button id="logoutBtn" class="mt-6 w-full py-2 px-3 bg-red-500 rounded hover:bg-red-600">Logout</button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <!-- Greeting -->
+      <h1 class="text-2xl font-bold mb-6 text-blue-400" id="greeting">
+        Welcome Admin
+      </h1>
+
+      <!-- Dashboard Summary -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-gray-800 shadow rounded-xl p-6 text-center">
+          <p class="text-3xl">🛍️</p>
+          <h2 class="text-xl font-bold" id="totalProducts">0</h2>
+          <p class="text-gray-400">Total Products</p>
+        </div>
+
+        <div class="bg-gray-800 shadow rounded-xl p-6 text-center">
+          <p class="text-3xl">📦</p>
+          <h2 class="text-xl font-bold" id="totalOrders">0</h2>
+          <p class="text-gray-400">Total Orders</p>
+        </div>
+
+        <div class="bg-gray-800 shadow rounded-xl p-6 text-center">
+          <p class="text-3xl">⏳</p>
+          <h2 class="text-xl font-bold" id="pendingOrders">0</h2>
+          <p class="text-gray-400">Pending Orders</p>
+        </div>
+
+        <div class="bg-gray-800 shadow rounded-xl p-6 text-center">
+          <p class="text-3xl">👤</p>
+          <h2 class="text-xl font-bold" id="totalCustomers">0</h2>
+          <p class="text-gray-400">Total Customers</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Sidebar toggle
+    function toggleMenu(id) {
+      document.getElementById(id).classList.toggle('hidden');
+    }
+
+    // Current Admin
+    let currentAdmin = JSON.parse(localStorage.getItem('currentAdmin'));
+    if (!currentAdmin) window.location.href = 'admin-login.html';
+
+    if (currentAdmin.id === 'philemon') {
+      document.getElementById('superAdminSection').classList.remove('hidden');
+      document.getElementById('createAdminMenu').classList.remove('hidden');
+      document.getElementById('manageAdminsSection').classList.remove('hidden');
+      document.getElementById('greeting').innerText = `Welcome Super Admin, ${currentAdmin.id}`;
+    } else {
+      document.getElementById('greeting').innerText = `Welcome Admin, ${currentAdmin.id}`;
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('currentAdmin');
+      window.location.href = 'admin-login.html';
+    });
+
+    // Save Bank Info
+    document.getElementById('saveBankBtn')?.addEventListener('click', () => {
+      const bankName = document.getElementById('bankName').value.trim();
+      const accountName = document.getElementById('accountName').value.trim();
+      const accountNumber = document.getElementById('accountNumber').value.trim();
+      if (!bankName || !accountName || !accountNumber) { alert('Fill all fields'); return; }
+      localStorage.setItem('superAdminBank', JSON.stringify({ bankName, accountName, accountNumber }));
+      alert('Bank info saved!');
+    });
+
+    // Create Admin (Super Admin only)
+    document.getElementById('createAdminBtn')?.addEventListener('click', () => {
+      const id = document.getElementById('newAdminId').value.trim();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const password = document.getElementById('newAdminPassword').value.trim();
+      if (!id || !email || !password) { alert('Fill all fields'); return; }
+      let admins = JSON.parse(localStorage.getItem('admins')) || [];
+      if (admins.find(a => a.id === id || a.email === email)) { alert('Admin exists'); return; }
+      admins.push({ id, email, password });
+      localStorage.setItem('admins', JSON.stringify(admins));
+      alert('Admin created!');
+      loadAdmins();
+    });
+
+    // Load Admins (Super Admin only)
+    function loadAdmins() {
+      let admins = JSON.parse(localStorage.getItem('admins')) || [];
+      const container = document.getElementById('adminsList');
+      if (!container) return;
+      container.innerHTML = '';
+      admins.forEach((a, i) => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
+        div.innerHTML = `
+          <span>${a.id} (${a.email})</span>
+          <button class="bg-red-500 px-2 py-1 rounded text-sm" onclick="deleteAdmin(${i})">Delete</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+    function deleteAdmin(index) {
+      let admins = JSON.parse(localStorage.getItem('admins')) || [];
+      admins.splice(index, 1);
+      localStorage.setItem('admins', JSON.stringify(admins));
+      loadAdmins();
+    }
+
+    // Load Users (All Admins)
+    function loadUsers() {
+      let users = JSON.parse(localStorage.getItem('customers')) || [];
+      const container = document.getElementById('usersList');
+      if (!container) return;
+      container.innerHTML = '';
+      users.forEach((u, i) => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
+        div.innerHTML = `
+          <span>${u.name || u.email || 'User'} </span>
+          <button class="bg-red-500 px-2 py-1 rounded text-sm" onclick="deleteUser(${i})">Delete</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+    function deleteUser(index) {
+      let users = JSON.parse(localStorage.getItem('customers')) || [];
+      users.splice(index, 1);
+      localStorage.setItem('customers', JSON.stringify(users));
+      loadUsers();
+    }
+
+    // Load Dashboard Stats
+    function loadDashboard() {
+      const products = JSON.parse(localStorage.getItem('shopsProducts')) || [];
+      const orders = JSON.parse(localStorage.getItem('shopsOrders')) || [];
+      const customers = JSON.parse(localStorage.getItem('customers')) || [];
+
+      document.getElementById('totalProducts').innerText = products.length;
+      document.getElementById('totalOrders').innerText = orders.length;
+      document.getElementById('pendingOrders').innerText = orders.filter(o => o.status === 'Pending').length;
+      document.getElementById('totalCustomers').innerText = customers.length;
+    }
+
+    // Init
+    loadDashboard();
+    if (currentAdmin.id === 'philemon') loadAdmins();
+    loadUsers();
+  </script>
+
+</body>
+
+</html>

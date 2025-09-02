@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Toastify CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body class="bg-gray-50">
+
+<!-- Hero Banner -->
+<section class="bg-gradient-to-r from-black to-blue-800 text-white py-12 text-center">
+  <h1 class="text-3xl font-bold">Welcome to Our Store</h1>
+  <p class="mt-2">Hello <span id="welcomeName" class="font-semibold"></span>, find your best products here!</p>
+  <!-- ✅ Logout Button -->
+  <button id="logoutBtn" class="mt-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold">Logout</button>
+</section>
+
+<!-- Search -->
+<div class="p-6">
+  <input id="searchInput" type="text" placeholder="Search products"
+    class="w-full max-w-xl mx-auto h-10 pl-4 rounded-lg border border-gray-300 outline-none">
+</div>
+
+<!-- Products List -->
+<section id="productList" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-6 pb-10"></section>
+
+<!-- Basket / Customer Order -->
+<div id="basket" class="fixed right-0 top-0 w-96 h-full bg-gray-50 shadow-lg p-6 overflow-y-auto hidden">
+  <h2 class="text-xl font-bold mb-4 text-blue-400">Your Basket</h2>
+  <div id="basketList" class="space-y-4"></div>
+
+  <div class="mt-4">
+    <label class="block mb-1">Delivery Address:</label>
+    <input type="text" id="deliveryAddress" class="w-full p-2 border rounded-lg mb-4" placeholder="Enter delivery address">
+
+    <h3 class="font-semibold mb-1">Bank Transfer Details:</h3>
+    <p id="bankDetails" class="text-sm text-gray-700 mb-2">Loading...</p>
+
+    <label class="block mb-1">Upload Payment Receipt:</label>
+    <input type="file" id="receipt" class="mb-4">
+
+    <button id="placeOrderBtn" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 w-full">Place Order</button>
+  </div>
+</div>
+
+<!-- Basket toggle button -->
+<button id="toggleBasket" class="fixed bottom-4 right-4 bg-black text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+  Basket 🛒 (0)
+</button>
+
+<!-- Toastify JS -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+// ✅ Get current customer
+const currentCustomer = JSON.parse(localStorage.getItem("currentCustomer"));
+if(currentCustomer){
+  document.getElementById("welcomeName").innerText = currentCustomer.name || currentCustomer.email;
+
+  // ✅ Track active users
+  let activeUsers = JSON.parse(localStorage.getItem("activeUsers")) || [];
+  if(!activeUsers.some(u => u.email === currentCustomer.email)){
+    activeUsers.push({ name: currentCustomer.name, email: currentCustomer.email });
+    localStorage.setItem("activeUsers", JSON.stringify(activeUsers));
+  }
+} else {
+  alert("Please login first!");
+  window.location.href = "customer-login.html";
+}
+
+// ✅ Logout functionality
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  let activeUsers = JSON.parse(localStorage.getItem("activeUsers")) || [];
+  activeUsers = activeUsers.filter(u => u.email !== currentCustomer.email);
+  localStorage.setItem("activeUsers", JSON.stringify(activeUsers));
+
+  localStorage.removeItem("currentCustomer");
+  alert("Logged out successfully!");
+  window.location.href = "customer-login.html";
+});
+
+// ---- (Your existing basket & products code stays the same) ----
+
+// Products & basket
+let basketItems = [];
+
+// Load products
+function loadCards(){
+  const products = JSON.parse(localStorage.getItem("shopsProducts")) || [];
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "group bg-white rounded-xl shadow p-4 hover:shadow-lg transition-transform duration-300 transform hover:scale-105 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.3)] hover:border border-solid border-[rgba(0,0,0,0.8)]";
+
+    card.innerHTML = `
+      <img src="${p.image}" class="h-48 w-full object-contain mb-3" />
+      <p class="font-semibold">${p.name}</p>
+      <p class="text-sm text-gray-500">${p.category}</p>
+      <p class="font-bold mb-2">\$${p.price} | ₦${p.price * 50}</p>
+      <p class="text-sm text-gray-400 truncate" title="${p.description}">${p.description}</p>
+      <button class="hidden group-hover:block bg-black text-white w-full py-2 rounded-lg">
+        Order Now
+      </button>
+    `;
+
+    const btn = card.querySelector("button");
+    btn.addEventListener("click", () => {
+      orderProduct(p.name, p.price, p.category, p.image, p.description);
+    });
+
+    list.appendChild(card);
+  });
+}
+
+// (Basket functions remain unchanged...)
+function orderProduct(name, price, category, image, description){
+  const existingItem = basketItems.find(i => i.name === name);
+  if(existingItem){
+    existingItem.quantity++;
+  } else {
+    basketItems.push({ name, price, category, image, quantity: 1, time: new Date().toLocaleString(), description });
+  }
+  renderBasket();
+  updateBasketButton();
+
+  Toastify({
+    text: `${name} added to basket ✅`,
+    duration: 3000,
+    close: true,
+    gravity: "top",
+    position: "right",
+    backgroundColor: "linear-gradient(to right, #2563eb, #1e40af)",
+    stopOnFocus: true
+  }).showToast();
+}
+
+document.getElementById('toggleBasket').addEventListener('click', () => {
+  const basket = document.getElementById('basket');
+  basket.classList.toggle('hidden');
+  renderBasket();
+});
+
+function renderBasket(){
+  const list = document.getElementById('basketList');
+  list.innerHTML = "";
+  basketItems.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = "bg-white p-2 rounded shadow flex justify-between items-center";
+    div.innerHTML = `
+      <span>${item.name} x ${item.quantity} - \$${item.price * item.quantity} | ₦${item.price*item.quantity*50}</span>
+      <button class="text-red-500" onclick="removeBasketItem(${index})">Remove</button>
+    `;
+    list.appendChild(div);
+  });
+  const total = basketItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  list.insertAdjacentHTML('beforeend', `<p class="font-bold mt-2">Total: \$${total} | ₦${total*50}</p>`);
+  updateBasketButton();
+}
+
+function removeBasketItem(index){
+  basketItems.splice(index,1);
+  renderBasket();
+  updateBasketButton();
+}
+
+function updateBasketButton(){
+  const count = basketItems.reduce((sum, i) => sum + i.quantity, 0);
+  document.getElementById("toggleBasket").innerText = `Basket 🛒 (${count})`;
+}
+
+// Load bank details
+const bank = JSON.parse(localStorage.getItem('superAdminBank'));
+if(bank){
+  document.getElementById('bankDetails').innerText = `Bank: ${bank.bankName}, Account Name: ${bank.accountName}, Account Number: ${bank.accountNumber}`;
+} else {
+  document.getElementById('bankDetails').innerText = "No bank account set. Please choose another payment method.";
+}
+
+// Place order
+document.getElementById('placeOrderBtn').addEventListener('click', () => {
+  const address = document.getElementById('deliveryAddress').value.trim();
+  const receiptFile = document.getElementById('receipt').files[0];
+
+  if(!address) return alert("Please enter delivery address.");
+  if(!receiptFile) return alert("Please upload payment receipt.");
+  if(basketItems.length === 0) return alert("Your basket is empty!");
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+    basketItems.forEach(item => {
+      orders.push({
+        ...item,
+        deliveryAddress: address,
+        paymentMethod: "Bank Transfer",
+        receipt: e.target.result,
+        status: "Pending",
+        customerEmail: currentCustomer.email
+      });
+    });
+    localStorage.setItem("shopsOrders", JSON.stringify(orders));
+    basketItems = [];
+    renderBasket();
+    updateBasketButton();
+    alert("Order placed! Admin will verify your payment.");
+    document.getElementById('basket').classList.add('hidden');
+  };
+  reader.readAsDataURL(receiptFile);
+});
+
+// Search function
+document.getElementById("searchInput").addEventListener("input", function(){
+  const value = this.value.toLowerCase();
+  document.querySelectorAll("#productList > div").forEach(card=>{
+    const name = card.querySelector("p.font-semibold").innerText.toLowerCase();
+    const category = card.querySelector("p.text-sm.text-gray-500").innerText.toLowerCase();
+    const price = card.querySelector("p.font-bold").innerText.toLowerCase();
+    const description = card.querySelector("p.text-sm.text-gray-400").innerText.toLowerCase();
+
+    if(name.includes(value) || category.includes(value) || price.includes(value) || description.includes(value)){
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  });
+});
+
+loadCards();
+</script>
+
+</body>
+</html>

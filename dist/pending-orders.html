@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pending Orders</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 p-10">
+
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-60 bg-gray-800 p-6">
+    <h2 class="text-xl font-bold text-blue-400 mb-6">Admin Panel</h2>
+    <nav class="space-y-2">
+      <a href="admin-dashboard.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Dashboard</a>
+      <a href="products.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Products</a>
+      <a href="pending-orders.html" class="block py-2 px-3 rounded-lg bg-gray-700">Pending Orders</a>
+      <a href="completed-orders.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Completed Orders</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6">
+    <h1 class="text-2xl font-bold mb-6 text-blue-400">Pending Orders</h1>
+    <div id="ordersList" class="space-y-4"></div>
+  </main>
+</div>
+
+<script>
+// Load all orders
+function loadOrders(){
+  const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+  const list  = document.getElementById("ordersList");
+  list.innerHTML = "";
+
+  if(orders.length === 0){
+    list.innerHTML = `<p class="text-gray-400">No pending orders.</p>`;
+    return;
+  }
+
+  orders.forEach((o, index)=>{
+    const card = document.createElement("div");
+    card.className = "bg-gray-800 rounded-xl p-4 flex flex-col gap-3";
+
+    // Show cart items
+    let itemsHTML = "";
+    if(o.cart && o.cart.length > 0){
+      itemsHTML = o.cart.map(item => 
+        `<li>${item.name} × ${item.quantity} • $${(item.price * item.quantity).toFixed(2)}</li>`
+      ).join("");
+    } else if(o.name) {
+      itemsHTML = `<li>${o.name} × ${o.quantity} • $${(o.price * o.quantity).toFixed(2)}</li>`;
+    } else {
+      itemsHTML = `<li>No items found</li>`;
+    }
+
+    // Payment details
+    let paymentHTML = `
+      <p class="text-sm text-gray-300">Payment Method: <span class="font-semibold">${o.payment || "Not specified"}</span></p>
+    `;
+    if(o.payment === 'transfer'){
+      paymentHTML += `
+        <p class="text-sm text-gray-400">Transfer to: ${o.account || "Super Admin Account"}</p>
+        ${o.receipt ? `<p class="text-sm text-green-400 break-words">Receipt uploaded: ${o.receipt}</p>` : `<p class="text-red-400">No receipt uploaded yet</p>`}
+        ${o.paymentVerified ? `<p class="text-green-400 font-bold">Payment Verified ✅</p>` : `<p class="text-yellow-400">Awaiting Verification</p>`}
+      `;
+    }
+
+    // Build card
+    card.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="max-w-xl">
+          <p class="font-bold text-lg">${o.customer || "Unnamed Customer"}</p>
+          <ul class="ml-4 list-disc space-y-1">${itemsHTML}</ul>
+          <p class="text-xs text-gray-400 mt-2">Ordered at: ${o.time || "Unknown time"}</p>
+        <p class="text-sm text-gray-300">Delivery Address: ${o.deliveryAddress}</p>
+        <p class="text-sm text-gray-300">Payment Method: ${o.paymentMethod || "Not specified"}</p>
+        </div>
+        <div class="flex flex-col gap-2 ml-4">
+          ${o.payment==='transfer' && !o.paymentVerified ? `<button class="text-yellow-400 underline" onclick="verifyPayment(${index})">Verify Payment</button>` : ''}
+          <button class="text-green-400 underline" onclick="completeOrder(${index})">Complete</button>
+        </div>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
+// Mark order as completed
+function completeOrder(i){
+  const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+  const completed = JSON.parse(localStorage.getItem("completedOrders")) || [];
+
+  completed.push(orders[i]);
+  orders.splice(i,1);
+
+  localStorage.setItem("shopsOrders", JSON.stringify(orders));
+  localStorage.setItem("completedOrders", JSON.stringify(completed));
+  loadOrders();
+}
+
+// Verify payment
+function verifyPayment(i){
+  const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+  orders[i].paymentVerified = true;
+  localStorage.setItem("shopsOrders", JSON.stringify(orders));
+  alert("Payment verified!");
+  loadOrders();
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>

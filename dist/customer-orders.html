@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="bg-gray-100 p-10">
+
+<h1 class="text-2xl font-bold mb-6">My Orders</h1>
+<div id="ordersList" class="space-y-4"></div>
+
+<script>
+// Load orders and show them as cards
+function loadOrders(){
+  const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+  const list  = document.getElementById("ordersList");
+  list.innerHTML = "";
+  orders.forEach((o, index) => {
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-xl p-4 shadow flex items-center gap-4";
+
+    card.innerHTML = `
+      <img src="${o.image}" class="h-16 w-16 object-cover rounded-md" />
+      <div class="flex-1">
+        <p class="font-semibold">${o.name}</p>
+        <p class="text-sm text-gray-500">${o.category}</p>
+        <p class="text-sm font-bold">$${o.price}</p>
+        <p class="text-xs text-gray-400">Ordered at: ${o.time}</p>
+      </div>
+      <button onclick="deleteOrder(${index})" class="text-red-500 underline">Delete</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// Remove order from localStorage
+function deleteOrder(i){
+  const orders = JSON.parse(localStorage.getItem("shopsOrders")) || [];
+  orders.splice(i,1);
+  localStorage.setItem("shopsOrders", JSON.stringify(orders));
+  loadOrders();
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>

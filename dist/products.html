@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-gray-200">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-60 bg-gray-800 p-6">
+      <h2 class="text-xl font-bold text-blue-400 mb-6">Admin Panel</h2>
+      <nav class="space-y-2">
+        <a href="admin-dashboard.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Dashboard</a>
+        <div>
+          <button onclick="toggleMenu('productsMenu')" class="w-full text-left py-2 px-3 rounded-lg bg-gray-700">Products ▾</button>
+          <div id="productsMenu" class="space-y-1 pl-4 mt-1">
+            <a href="add-product.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Add Product</a>
+            <a href="products.html" class="block py-2 px-3 rounded-lg bg-gray-700">View Products</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <h1 class="text-2xl font-bold mb-6 text-blue-400">Products</h1>
+
+      <div class="bg-gray-800 rounded-xl shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-700">
+              <th class="text-left py-2">Product</th>
+              <th class="text-left py-2">Category</th>
+              <th class="text-left py-2">Price</th>
+              <th class="text-left py-2">Stock</th>
+              <th class="text-left py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productTable"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+      <h2 class="text-lg font-bold text-blue-400 mb-4">Edit Product</h2>
+      <form id="editForm" class="space-y-3">
+        <input type="text" id="editName" placeholder="Product Name" class="w-full p-2 rounded bg-gray-700 text-gray-200" required>
+        <input type="text" id="editCategory" placeholder="Category" class="w-full p-2 rounded bg-gray-700 text-gray-200" required>
+        <input type="number" id="editPrice" placeholder="Price" class="w-full p-2 rounded bg-gray-700 text-gray-200" required>
+        <input type="number" id="editStock" placeholder="Stock" class="w-full p-2 rounded bg-gray-700 text-gray-200" required>
+        <input type="text" id="editImage" placeholder="Image URL" class="w-full p-2 rounded bg-gray-700 text-gray-200">
+        
+        <div class="flex justify-between mt-4">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+function toggleMenu(id){document.getElementById(id).classList.toggle("hidden");}
+
+let editIndex = null;
+
+function loadProducts(){
+  const products = JSON.parse(localStorage.getItem("shopsProducts")) || [];
+  const table = document.getElementById("productTable");
+  table.innerHTML = "";
+  products.forEach((p,index)=>{
+    const row = document.createElement("tr");
+    row.className="border-b border-gray-700";
+    row.innerHTML = `
+      <td class="py-2">${p.name}</td>
+      <td>${p.category}</td>
+      <td>$${p.price}</td>
+      <td>${p.stock || 0}</td>
+      <td>
+        <button class="text-blue-400 underline mr-2" onclick="openEdit(${index})">Edit</button>
+        <button class="text-red-400 underline" onclick="deleteProduct(${index})">Delete</button>
+      </td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+function deleteProduct(i){
+  const products = JSON.parse(localStorage.getItem("shopsProducts")) || [];
+  products.splice(i,1);
+  localStorage.setItem("shopsProducts", JSON.stringify(products));
+  loadProducts();
+}
+
+function openEdit(i){
+  const products = JSON.parse(localStorage.getItem("shopsProducts")) || [];
+  const p = products[i];
+  editIndex = i;
+
+  document.getElementById("editName").value = p.name;
+  document.getElementById("editCategory").value = p.category;
+  document.getElementById("editPrice").value = p.price;
+  document.getElementById("editStock").value = p.stock || 0;
+  document.getElementById("editImage").value = p.image || "";
+
+  document.getElementById("editModal").classList.remove("hidden");
+}
+
+function closeModal(){
+  document.getElementById("editModal").classList.add("hidden");
+}
+
+document.getElementById("editForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const products = JSON.parse(localStorage.getItem("shopsProducts")) || [];
+  products[editIndex] = {
+    ...products[editIndex],
+    name: document.getElementById("editName").value,
+    category: document.getElementById("editCategory").value,
+    price: parseFloat(document.getElementById("editPrice").value),
+    stock: parseInt(document.getElementById("editStock").value),
+    image: document.getElementById("editImage").value
+  };
+
+  localStorage.setItem("shopsProducts", JSON.stringify(products));
+  loadProducts();
+  closeModal();
+});
+
+loadProducts();
+</script>
+</body>
+</html>

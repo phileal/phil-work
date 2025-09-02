@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Completed Orders</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="bg-gray-900 text-gray-100 p-10">
+
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-60 bg-gray-800 p-6">
+    <h2 class="text-xl font-bold text-blue-400 mb-6">Admin Panel</h2>
+    <nav class="space-y-2">
+      <a href="admin-dashboard.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Dashboard</a>
+      <a href="products.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Products</a>
+      <a href="pending-orders.html" class="block py-2 px-3 rounded-lg hover:bg-gray-700">Pending Orders</a>
+      <a href="completed-orders.html" class="block py-2 px-3 rounded-lg bg-gray-700">Completed Orders</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-blue-400">Completed Orders</h1>
+      <button onclick="clearAllCompleted()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white text-sm">
+        Clear All
+      </button>
+    </div>
+
+    <!-- Total Revenue -->
+    <div id="totalRevenue" class="mb-4 text-lg font-semibold text-green-400"></div>
+
+    <div id="completedList" class="space-y-4"></div>
+  </main>
+</div>
+
+<script>
+function loadCompleted(){
+  const completed = JSON.parse(localStorage.getItem("completedOrders")) || [];
+  const list = document.getElementById("completedList");
+  const revenueEl = document.getElementById("totalRevenue");
+  list.innerHTML = "";
+
+  let total = 0;
+
+  completed.forEach((o,index)=>{
+    // Calculate total revenue
+    if(o.cart && o.cart.length > 0){
+      o.cart.forEach(item=>{
+        total += item.price * item.quantity;
+      });
+    } else {
+      total += o.price * o.quantity;
+    }
+
+    // Build cart items HTML
+    let itemsHTML = "";
+    if(o.cart && o.cart.length > 0){
+      itemsHTML = o.cart.map(item => 
+        `<li>${item.name} × ${item.quantity} • $${item.price * item.quantity}</li>`
+      ).join("");
+    } else {
+      itemsHTML = `<li>${o.name} × ${o.quantity} • $${o.price * o.quantity}</li>`;
+    }
+
+    const card = document.createElement("div");
+    card.className = "bg-gray-800 rounded-xl p-4";
+
+    card.innerHTML = `
+      <div>
+        <p class="font-bold text-lg">${o.customer}</p>
+        <ul class="ml-4 list-disc">${itemsHTML}</ul>
+        <p class="text-xs text-gray-400 mt-2">Completed at: ${o.time}</p>
+        <p class="text-sm text-gray-300">Delivery Address: ${o.delivery || "No address provided"}</p>
+      </div>
+      <div class="mt-3">
+        <button class="text-red-400 underline" onclick="deleteCompleted(${index})">Delete</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Show revenue
+  revenueEl.textContent = `Total Revenue: $${total.toFixed(2)}`;
+}
+
+function deleteCompleted(i){
+  const completed = JSON.parse(localStorage.getItem("completedOrders")) || [];
+  completed.splice(i,1);
+  localStorage.setItem("completedOrders", JSON.stringify(completed));
+  loadCompleted();
+}
+
+function clearAllCompleted(){
+  if(confirm("Are you sure you want to clear all completed orders?")){
+    localStorage.removeItem("completedOrders");
+    loadCompleted();
+  }
+}
+
+loadCompleted();
+</script>
+
+</body>
+</html>
